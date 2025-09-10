@@ -1,0 +1,77 @@
+name: DevSecOps Security Pipeline
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  security:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      
+      - name: Secret Scanning (gitleaks)
+        uses: zricethezav/gitleaks-action@v2
+        with:
+          config: ""
+        continue-on-error: true
+
+      
+      - name: SCA Scan (Snyk)
+        uses: snyk/actions/node@master
+        env:
+          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+        with:
+          args: test --json-file-output=results-sca.json
+        continue-on-error: true
+
+      
+      - name: SAST Scan (Semgrep)
+        uses: returntocorp/semgrep-action@v1
+        with:
+          config: "p/owasp-top-ten"
+        continue-on-error: true
+
+     
+      - name: Misconfiguration Scan (Trivy)
+        uses: aquasecurity/trivy-action@master
+        with:
+          scan-type: config
+          format: json
+          output: results-misconfig.json
+        continue-on-error: true
+
+      
+      - name: DAST Scan (OWASP ZAP Baseline)
+        uses: zaproxy/action-baseline@v0.10.0
+        with:
+          target: "http://localhost:3000"
+        continue-on-error: true
+
+      
+      - name: Upload security reports
+        uses: actions/upload-artifact@v3
+        with:
+          name: security-reports
+          path: |
+            results-sca.json
+            results-misconfig.json
+            semgrep.sarif
+            gitleaks-report.json
+            zap.out
+
+      
+      - name: Check results and send notification
+        run: |
+          echo "=== Checking for critical findings ==="
+          if grep -qi "CRITICAL" results-sca.json results-misconfig.json zap.out; then
+            echo "Critical vulnerability found!"
+            curl -X POST -H 'Content-type: application/json' \
+              --data '{"text":"🚨 Critical vulnerability detected in Vuln Bank pipeline!"}' \
+              ${{ secrets.SLACK_WEBHOOK }}
+          fi
