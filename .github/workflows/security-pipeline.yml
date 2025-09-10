@@ -9,16 +9,17 @@ on:
 jobs:
   security:
     runs-on: ubuntu-latest
-
+    env:
+      GITHUB_TOKEN: $
+ {{ secrets.GITHUB_TOKEN }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
 
 
       - name: Secret Scanning (gitleaks)
-        uses: zricethezav/gitleaks-action@v2
-        with:
-          config: ""
+        uses:
+      zricethezav/gitleaks-action@v2
         continue-on-error: true
 
 
