@@ -10,65 +10,60 @@ jobs:
   security:
     runs-on: ubuntu-latest
     env:
-      GITHUB_TOKEN: $
- {{ secrets.GITHUB_TOKEN }}
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v3
+      - name: Checkout code
+        uses: actions/checkout@v4
 
-
+      # 🔐 Secret Scanning (Gitleaks)
       - name: Secret Scanning (gitleaks)
-        uses:
-      zricethezav/gitleaks-action@v2
+        uses: gitleaks/gitleaks-action@v2
+        with:
+          args: detect --source . --no-git -v --report-path=gitleaks-report.json
         continue-on-error: true
 
-
+      # 📦 Software Composition Analysis (Snyk)
       - name: SCA Scan (Snyk)
         uses: snyk/actions/node@master
-        env:
-          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
         with:
           args: test --json-file-output=results-sca.json
         continue-on-error: true
 
+      # 🧑‍💻 Static Application Security Testing (Semgrep)
       - name: SAST Scan (Semgrep)
         uses: returntocorp/semgrep-action@v1
         with:
           config: "p/owasp-top-ten"
         continue-on-error: true
 
-      - name: Misconfiguration Scan (Trivy)
-        uses: aquasecurity/trivy-action@master
+      # ⚙️ Misconfiguration Scan (Trivy)
+      - name: Misconfiguration Scan
+        uses: aquasecurity/trivy-action@0.20.0
         with:
           scan-type: config
           format: json
           output: results-misconfig.json
         continue-on-error: true
 
-      - name: DAST Scan (OWASP ZAP Baseline)
+      # 🌐 Dynamic Application Security Testing (ZAP)
+      - name: DAST Scan (OWASP ZAP)
         uses: zaproxy/action-baseline@v0.10.0
         with:
           target: "http://localhost:3000"
         continue-on-error: true
 
-      - name: Upload security reports
+      # 📂 Upload artifacts
+      - name: Upload scan results
         uses: actions/upload-artifact@v4
         with:
           name: security-reports
           path: |
+            gitleaks-report.json
             results-sca.json
             results-misconfig.json
-            semgrep.sarif
-            gitleaks-report.json
-            zap.out
+            report_html.html
+            report_json.json
+            report_md.md
 
-
-      - name: Check results and send notification
-        run: |
-          echo "=== Checking for critical findings ==="
-          if grep -qi "CRITICAL" results-sca.json results-misconfig.json zap.out; then
-            echo "Critical vulnerability found!"
-            curl -X POST -H 'Content-type: application/json' \
-              --data '{"text":" Critical vulnerability detected in Vuln Bank pipeline!"}' \
-              ${{ secrets.SLACK_WEBHOOK }}
-          fi
