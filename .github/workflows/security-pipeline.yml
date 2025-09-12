@@ -31,12 +31,16 @@ jobs:
           args: test --json-file-output=results-sca.json
         continue-on-error: true
 
-      # 🧑‍💻 Static Application Security Testing (Semgrep)
+      # 🧑💻 Static Application Security Testing (Semgrep)
       - name: SAST Scan (Semgrep)
         uses: returntocorp/semgrep-action@v1
+         env:
+          SEMGREP_APP_TOKEN: ${{ secrets.SEMGREP_APP_TOKEN }}
         with:
-          config: "p/owasp-top-ten"
-        continue-on-error: true
+         publishToken: ${{ secrets.SEMGREP_APP_TOKEN }}
+         config: "p/owasp-top-ten"
+       continue-on-error: true
+
 
       # ⚙️ Misconfiguration Scan (Trivy)
       - name: Misconfiguration Scan
