@@ -38,27 +38,20 @@ jobs:
             ${{ secrets.USERNAME }}@${{ secrets.HOST }} << 'EOF'
             set -e
 
-            cd /home/${USER}/vuln-bank
+            cd /home/${{ secrets.USERNAME }}/vuln-bank
 
-            # ensure .env exists (bootstrap on first deploy)
             if [ ! -f .env ]; then
               cp .env.example .env
             fi
 
-            # stop any running containers
             docker compose down
-
-            # rebuild & restart
             docker compose up -d --build
-
-            # remove dangling images
             docker image prune -f
-
-            # show status
             docker compose ps
           EOF
 
       - name: Health Check
         run: |
           sleep 20
-          curl -f https://vulnbank.org || (echo "Health check failed" && exit 1)
+          curl -f http://vulnbank.org || (echo "Health check failed" && exit 1)
+
