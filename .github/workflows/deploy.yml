@@ -7,9 +7,26 @@ on:
   workflow_dispatch:
 
 jobs:
+  security:
+    runs-on: ubuntu-latest
+    name: SAST Scan (Semgrep)
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Run Semgrep
+        uses: returntocorp/semgrep-action@v1
+        with:
+          publishToken: ${{ secrets.SEMGREP_APP_TOKEN }}
+          config: "p/owasp-top-ten"
+        env:
+          SEMGREP_APP_TOKEN: ${{ secrets.SEMGREP_APP_TOKEN }}
+
   deploy:
     runs-on: ubuntu-latest
     name: Deploy to Server
+    needs: security   # <-- deploy hanya jalan kalau security selesai sukses
 
     environment:
       name: production
