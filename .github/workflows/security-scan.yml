@@ -1,0 +1,66 @@
+name: Security Scan with Trivy
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+  workflow_dispatch:   
+
+jobs:
+  trivy-scan:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      
+      - name: Run Trivy FS (file system) scan
+        uses: aquasecurity/trivy-action@master
+        with:
+          scan-type: fs
+          format: table
+          exit-code: 0
+          output: trivy-fs-report.txt
+
+      
+      - name: Run Trivy Config scan
+        uses: aquasecurity/trivy-action@master
+        with:
+          scan-type: config
+          format: table
+          exit-code: 0
+          output: trivy-config-report.txt
+
+      
+      - name: Upload Trivy scan reports
+        uses: actions/upload-artifact@v3
+        with:
+          name: trivy-reports
+          path: |
+            trivy-fs-report.txt
+            trivy-config-report.txt
+
+      
+      - name: Run Trivy FS scan with exit-code=1
+        id: trivy_critical
+        uses: aquasecurity/trivy-action@master
+        with:
+          scan-type: fs
+          severity: CRITICAL,HIGH
+          exit-code: 1
+          format: json
+          output: trivy-critical.json
+        continue-on-error: true
+
+      - name: Send Slack notification if Critical found
+        if: steps.trivy_critical.outcome == 'failure'
+        uses: slackapi/slack-github-action@v1.24.0
+        with:
+          payload: |
+            {
+              "text": "🚨 *Critical vulnerability detected!* Check the latest Trivy report in GitHub Actions artifacts."
+            }
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
