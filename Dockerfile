@@ -18,12 +18,20 @@ COPY . .
 # Ensure uploads directory exists and has proper permissions
 RUN chmod 777 static/uploads
 
-EXPOSE 5000
-
-CMD ["python", "app.py"]
-
-
+# Buat user non-root
 RUN addgroup --system appgroup && adduser --system appuser --ingroup appgroup
 
+# Ubah ownership folder /app ke user baru
+RUN chown -R appuser:appgroup /app
 
+# Pindah ke user non-root
 USER appuser
+
+EXPOSE 5000
+
+# Tambahkan healthcheck
+HEALTHCHECK --interval=30s --timeout=10s --start-period=10s --retries=3 \
+  CMD curl -f http://localhost:5000/ || exit 1
+
+# Jalankan aplikasi
+CMD ["python", "app.py"]
