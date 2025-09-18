@@ -21,3 +21,9 @@ RUN chmod 777 static/uploads
 EXPOSE 5000
 
 CMD ["python", "app.py"]
+
+
+RUN addgroup --system appgroup && adduser --system appuser --ingroup appgroup
+
+
+USER appuser
