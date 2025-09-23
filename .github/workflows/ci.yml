@@ -1,17 +1,26 @@
-secret-scanning:
-  name: Secret Scanning (Gitleaks)
-  runs-on: ubuntu-latest
-  steps:
-    - name: Checkout code
-      uses: actions/checkout@v3
+name: Secret Scanning (Gitleaks)
 
-    - name: Run Gitleaks
-      uses: gitleaks/gitleaks-action@v2
-      with:
-        args: detect --source . --no-git -v --report-path gitleaks-report.json
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
 
-    - name: Upload Gitleaks report
-      uses: actions/upload-artifact@v3
-      with:
-        name: gitleaks-report
-        path: gitleaks-report.json
+jobs:
+  secret_scanning:
+    name: Secret Scanning (Gitleaks)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Run Gitleaks
+        uses: gitleaks/gitleaks-action@v2
+        with:
+          args: detect --source . --no-git -v --report-path gitleaks-report.json
+
+      - name: Upload Gitleaks report
+        uses: actions/upload-artifact@v3
+        with:
+          name: gitleaks-report
+          path: gitleaks-report.json
