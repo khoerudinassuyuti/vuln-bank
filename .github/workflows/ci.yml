@@ -20,7 +20,7 @@ jobs:
           args: detect --source . --no-git -v --report-path gitleaks-report.json
 
       - name: Upload Gitleaks report
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: gitleaks-report
           path: gitleaks-report.json
