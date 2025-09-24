@@ -31,7 +31,8 @@ jobs:
           npm install -g snyk
 
       - name: Run Semgrep (SAST)
-        run: semgrep --config=p/security --json --output semgrep-report.json
+        run: semgrep --config="p/ci" --json --output semgrep-report.json
+
 
       - name: Run Snyk (SCA)
         run: snyk test --all-projects --json > snyk-report.json
