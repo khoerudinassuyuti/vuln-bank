@@ -37,7 +37,8 @@ jobs:
           npm install -g snyk
 
       - name: Run Semgrep (SAST)
-        run: semgrep --config=security --json --output semgrep-report.json
+        run: semgrep --config="p/ci" --json --output semgrep-report.json
+
 
       - name: Authenticate Snyk (Organization)
         run: snyk auth $SNYK_TOKEN
