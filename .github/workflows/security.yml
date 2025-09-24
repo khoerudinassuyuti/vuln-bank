@@ -1,50 +1,62 @@
-name: DevSecOps Pipeline
+name: Security Scan
 
 on:
   push:
-    branches: [main]
+    branches: [ "main" ]
   pull_request:
-    branches: [main]
+    branches: [ "main" ]
 
 jobs:
   security:
     runs-on: ubuntu-latest
-    env:
-      FLASK_APP: app.py
-      DATABASE_URL: ${{ secrets.DATABASE_URL }}
-      SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
-      SNYK_TOKEN: ${{ secrets.SNYK_ORG_TOKEN }}
-      SNYK_ORG: ${{ secrets.SNYK_ORG_ID }}
+
     steps:
-      - name: Checkout Repo
+      - name: Checkout code
         uses: actions/checkout@v3
 
-      - name: Setup Python
+      - name: Set up Python
         uses: actions/setup-python@v4
         with:
-          python-version: '3.10'
+          python-version: "3.10"
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v3
-        with:
-          node-version: '20'
+      # Install Semgrep
+      - name: Install Semgrep
+        run: pip install semgrep
 
-      - name: Install dependencies
-        run: |
-          python -m pip install --upgrade pip
-          pip install -r requirements.txt
-          pip install semgrep requests
-          npm install -g snyk
-
-      - name: Run Semgrep (SAST)
+      # Run Semgrep
+      - name: Run Semgrep
         run: semgrep --config="p/ci" --json --output semgrep-report.json
 
 
-      - name: Authenticate Snyk (Organization)
+      # Install Snyk
+      - name: Install Snyk
+        run: npm install -g snyk
+
+      # Authenticate Snyk with Personal API Token
+      - name: Authenticate Snyk
         run: snyk auth $SNYK_TOKEN
+        env:
+          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
 
-      - name: Run Snyk (SCA) - Organization
-        run: snyk test --all-projects --org=$SNYK_ORG --json > snyk-report.json
+      # Run Snyk test
+      - name: Run Snyk
+        run: snyk test --all-projects --json > snyk-report.json
+        env:
+          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
 
-      - name: Notify Slack if critical vulnerabilities
-        run: python scripts/notify_critical.py
+      # Upload reports as artifacts
+      - name: Upload Security Reports
+        uses: actions/upload-artifact@v3
+        with:
+          name: security-reports
+          path: |
+            semgrep-report.json
+            snyk-report.json
+
+      # Send notification to Slack
+      - name: Notify Slack
+        if: always()
+        run: |
+          curl -X POST -H 'Content-type: application/json' \
+          --data '{"text":"Security scan finished. Check the reports in GitHub Actions artifacts."}' \
+          ${{ secrets.SLACK_WEBHOOK_URL }}
