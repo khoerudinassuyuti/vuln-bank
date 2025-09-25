@@ -1,176 +1,153 @@
-# 📌 Vuln-Bank – DevSecOps Final Project  
+# 🏦 Vuln Bank – DevSecOps Final Project
 
-![DevSecOps Flowchart](A_flowchart_in_the_image_illustrates_a_DevSecOps_p.png)  
-
-## 🔹 Deskripsi Proyek  
-**Vuln-Bank** adalah aplikasi web banking sederhana berbasis Flask yang sengaja dibuat dengan celah keamanan.  
-Tujuannya untuk digunakan sebagai bahan praktik **DevSecOps Pipeline**.  
-
-Pipeline ini mengintegrasikan:  
-- **SAST (Static Application Security Testing)** → Semgrep  
-- **SCA (Software Composition Analysis)** → Snyk  
-- **Secret Scanning** → Gitleaks  
-- **Misconfiguration Scan** → Trivy  
-- **DAST (Dynamic Application Security Testing)** → OWASP ZAP  
-- **Slack Alert** → Notifikasi otomatis untuk vuln HIGH/CRITICAL  
-
-Semua hasil scan dikumpulkan sebagai laporan JSON dan diupload sebagai artifacts.  
+Proyek ini adalah bagian dari **Final Project DevSecOps** dengan studi kasus *Vuln Bank*, sebuah aplikasi perbankan digital yang masih memiliki banyak celah keamanan.  
+Tujuan utama dari proyek ini adalah membangun **CI/CD Pipeline dengan Security Scanning otomatis** agar setiap perubahan kode dapat langsung dipindai kerentanannya.
 
 ---
 
-## 🔹 Arsitektur Pipeline  
+## 📌 Fitur Pipeline
 
-1. **Code Checkout** dari repo  
-2. **Install Dependencies** → Python, Semgrep, Snyk, Docker Compose  
-3. **Security Scans**:  
-   - Semgrep (SAST)  
-   - Snyk (SCA)  
-   - Gitleaks (Secret Scan)  
-   - Trivy (Misconfiguration)  
-   - OWASP ZAP (DAST)  
-4. **Report & Notification**  
-   - Semua hasil scan diupload sebagai artifacts  
-   - Slack menerima notifikasi jika ada **HIGH/CRITICAL vulnerabilities**  
-## 📊 Notifikasi Slack
-Contoh notifikasi pipeline ke Slack:
+Pipeline CI/CD ini berjalan otomatis setiap kali ada perubahan pada branch `main` dan setiap ada Pull Request ke `main`.  
+Tahapan yang diintegrasikan:
 
-![Slack Alerts](images/slack-alerts.png)
+1. **Secret Scanning (🔑 Gitleaks)**  
+   - Mendeteksi kebocoran kredensial, API key, atau password di dalam kode.
 
----
+2. **Software Composition Analysis (📦 Snyk / Trivy)**  
+   - Memeriksa dependency pihak ketiga untuk menemukan library yang memiliki CVE.  
+   - Snyk: Fokus pada `requirements.txt`.  
+   - Trivy: Fokus pada `Dockerfile` dan image container.
 
-## 📈 Diagram Pipeline
-Diagram DevSecOps Pipeline:
+3. **Static Application Security Testing (📖 Semgrep)**  
+   - Analisis kode Python (`app.py` dan modul terkait).  
+   - Mendeteksi insecure coding patterns sesuai OWASP Top 10.
 
-![Pipeline](images/devsecops-pipeline.png)
----
+4. **Misconfiguration Scanning (⚙️ Trivy Config)**  
+   - Mengecek Dockerfile, docker-compose, dan konfigurasi lainnya.  
+   - Contoh: penggunaan user root, port terbuka, privilege escalation.
 
-## 🔹 Cara Menjalankan Aplikasi  
+5. **Dynamic Application Security Testing (🌐 OWASP ZAP / DAST)**  
+   - Menguji aplikasi yang sedang berjalan pada `http://127.0.0.1:5000`.  
+   - Mendeteksi celah seperti SQL Injection, XSS, dll.
 
-### 1. Clone Repository  
-```bash
-git clone https://github.com/khoerudinassuyuti/vuln-bank.git
-cd vuln-bank
-
-2. Setup Environment
-
-Buat file .env berisi:
-
-FLASK_APP=app.py
-DATABASE_URL=postgresql://postgres:postgres@db:5432/vulnerable_bank
-
-3. Jalankan dengan Docker Compose
-
-docker-compose up -d
-
-4. Akses Aplikasi
-
-http://localhost:5000
-
+6. **Notifikasi (📢 Slack / Email / Telegram)**  
+   - Jika ditemukan **High atau Critical vulnerability**, pipeline akan mengirimkan notifikasi otomatis ke channel yang sudah dikonfigurasi.
 
 ---
 
-🔹 Cara Menjalankan Pipeline GitHub Actions
+## 📂 Struktur Repository
 
-Pipeline otomatis jalan ketika:
+vuln-bank/ ├── app.py ├── requirements.txt ├── Dockerfile ├── docker-compose.yml ├── .github/workflows/ │   ├── ci.yml           # Pipeline utama │   ├── gitleaks.yml     # Secret Scanning │   ├── semgrep.yml      # SAST │   └── trivy.yml        # SCA + Misconfig └── reports/ ├── snyk-report.json ├── semgrep-report.json ├── trivy-report.json └── zap-report.html
 
-Push ke branch main
+---
 
-Pull request ke branch main
+## 🚀 Cara Menjalankan Pipeline
+
+1. **Clone Repository**
+   ```bash
+   git clone https://github.com/khoerudinassuyuti/vuln-bank.git
+   cd vuln-bank
+
+2. Push ke Branch main
+
+git add .
+git commit -m "update pipeline"
+git push origin main
 
 
-Untuk run manual:
-
-1. Push perubahan ke repo
-
-
-2. Buka tab Actions di GitHub
-
-
-3. Pilih DevSecOps Pipeline → klik Run workflow
+3. GitHub Actions akan otomatis berjalan dan melakukan scanning sesuai tahapan di atas.
 
 
 
 
 ---
 
-🔹 Secrets yang Harus Ditambahkan
+📊 Contoh Hasil Scan
 
-Tambahkan di Settings > Secrets and variables > Actions:
+Gitleaks → gitleaks-report.json
 
-DATABASE_URL → URL database PostgreSQL
+Snyk → snyk-report.json
 
-SLACK_WEBHOOK_URL → Webhook Slack
+Trivy → trivy-report.json
 
-SNYK_TOKEN → API token dari Snyk
+Semgrep → semgrep-report.json
+
+OWASP ZAP → zap-report.html
+
+
+Semua laporan bisa diunduh dari menu Actions → Artifacts di GitHub.
+
+
+---
+
+📢 Notifikasi Critical Vulnerability
+
+Jika pipeline menemukan vulnerability dengan severity High atau Critical, notifikasi otomatis akan dikirim ke Slack/Telegram/email.
+
+Pesan notifikasi berisi:
+
+Nama vulnerability
+
+Severity
+
+Lokasi file / dependency
+
+Link ke laporan lengkap
+
 
 
 
 ---
 
-🔹 Struktur Repo
+📖 Dokumentasi
 
-vuln-bank/
-│── app.py
-│── requirements.txt
-│── docker-compose.yml
-│── scripts/
-│    └── notify_critical.py
-│── .github/
-│    └── workflows/
-│         └── devsecops-pipeline.yml
-└── README.md
+1. Arsitektur Pipeline
+
+Setiap commit ke branch main → trigger GitHub Actions.
+
+Workflow berjalan: Secret Scan → SCA → SAST → Misconfig → DAST.
+
+Jika ada temuan Critical, kirim notifikasi → Slack/Telegram/email.
+
+Semua laporan tersimpan sebagai artifact.
 
 
----
 
-🔹 Tools yang Digunakan
-
-Semgrep → Static Analysis (SAST)
-
-Snyk → Dependency Vulnerability (SCA)
+2. Tools yang Digunakan
 
 Gitleaks → Secret Scanning
 
-Trivy → Misconfiguration Scan
+Snyk + Trivy → Dependency & Misconfig Scanning
+
+Semgrep → Static Analysis (SAST)
 
 OWASP ZAP → Dynamic Testing (DAST)
 
-Slack → Notifikasi otomatis
+Slack/Email/Telegram → Alert Notifikasi
 
 
 
----
+3. Improvement
 
-🔹 Hasil Pipeline
+Branch protection rules pada main (opsional).
 
-Semua laporan (semgrep-report.json, snyk-report.json, gitleaks-report.json, trivy-misconfig-report.json, zap_scan/) diupload ke GitHub Actions.
+Deployment aplikasi ke server Ubuntu dengan hardening.
 
-Slack akan menerima notifikasi jika ada HIGH/CRITICAL vuln.
+Export laporan ke GitHub Issues untuk vulnerability High/Critical.
 
 
-Contoh notifikasi:
 
-🚨 Snyk menemukan 3 vuln HIGH/CRITICAL!
-🚨 Semgrep menemukan 2 issue severity ERROR!
-🚨 Trivy menemukan 1 misconfiguration HIGH!
 
 
 ---
 
-🔹 Quick Start
+🏁 Kesimpulan
 
-git clone https://github.com/khoerudinassuyuti/vuln-bank.git
-cd vuln-bank
-docker-compose up -d
-
-Akses aplikasi:
-
-http://localhost:5000
+Dengan pipeline ini, Vuln Bank dapat lebih cepat mendeteksi celah keamanan sebelum aplikasi masuk ke production.
+Pipeline DevSecOps ini membantu developer dan security engineer bekerja sama secara otomatis, konsisten, dan terukur.
 
 
 ---
 
-📌 Author: Khoerudin Assuyuti
-📌 Tujuan: Final Project DevSecOps – Integrasi Security ke CI/CD Pipeline
-
----
+✍️ Author: gisma hoerudin 
+📌 Role: demo DevSecOps Engineer Final Project
