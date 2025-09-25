@@ -27,7 +27,7 @@ Tahapan yang diintegrasikan:
    - Contoh: penggunaan user root, port terbuka, privilege escalation.
 
 5. **Dynamic Application Security Testing (🌐 OWASP ZAP / DAST)**  
-   - Menguji aplikasi yang sedang berjalan pada `http://127.0.0.1:5000`.  
+   - Menguji aplikasi yang sedang berjalan pada `localhost:5000`.  
    - Mendeteksi celah seperti SQL Injection, XSS, dll.
 
 6. **Notifikasi (📢 Slack / Email / Telegram)**  
@@ -82,7 +82,7 @@ Semua laporan bisa diunduh dari menu Actions → Artifacts di GitHub.
 
 📢 Notifikasi Critical Vulnerability
 
-Jika pipeline menemukan vulnerability dengan severity High atau Critical, notifikasi otomatis akan dikirim ke Slack/Telegram/email.
+Jika pipeline menemukan vulnerability dengan severity High atau Critical, notifikasi otomatis akan dikirim ke Slack.
 
 Pesan notifikasi berisi:
 
@@ -107,7 +107,7 @@ Setiap commit ke branch main → trigger GitHub Actions.
 
 Workflow berjalan: Secret Scan → SCA → SAST → Misconfig → DAST.
 
-Jika ada temuan Critical, kirim notifikasi → Slack/Telegram/email.
+Jika ada temuan Critical, kirim notifikasi → Slack.
 
 Semua laporan tersimpan sebagai artifact.
 
