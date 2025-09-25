@@ -31,7 +31,17 @@ Semua hasil scan dikumpulkan sebagai laporan JSON dan diupload sebagai artifacts
 4. **Report & Notification**  
    - Semua hasil scan diupload sebagai artifacts  
    - Slack menerima notifikasi jika ada **HIGH/CRITICAL vulnerabilities**  
+## 📊 Notifikasi Slack
+Contoh notifikasi pipeline ke Slack:
 
+![Slack Alerts](images/slack-alerts.png)
+
+---
+
+## 📈 Diagram Pipeline
+Diagram DevSecOps Pipeline:
+
+![Pipeline](images/devsecops-pipeline.png)
 ---
 
 ## 🔹 Cara Menjalankan Aplikasi  
