@@ -123,7 +123,7 @@ Semgrep → Static Analysis (SAST)
 
 OWASP ZAP → Dynamic Testing (DAST)
 
-Slack/Email/Telegram → Alert Notifikasi
+mengirim Slack Notifikasi
 
 
 
